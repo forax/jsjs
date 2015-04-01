@@ -86,12 +86,11 @@ if (arguments.indexOf("clean") != -1) {
 compileJava(javac, source);
 
 // then compile bootjs and jsjs.js with nashorn
-compileJS(compiler_jjs, bootjs, false);
 compileJS(compiler_jjs, jsjs, false);
+compileJS(compiler_jjs, bootjs, false);
 
-// then compile boot.js with jsjs if available
+// then use jsjs as compiler
 var compiler = Files.exists(artifact(jsjs, ".class"))? compiler_jsjs: compiler_jjs;
-compileJS(compiler, bootjs, false);
 
 // re-compile jsjs with jsjs if bootstrap option is set
 if (arguments.indexOf("bootstrap") != -1) {
