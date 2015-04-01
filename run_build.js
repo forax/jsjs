@@ -9,8 +9,8 @@ function artifact(path, extension) {
 	return Paths.get("", pathname.substring(0, pathname.length() - 3) + extension);
 }
 function exec(cmd, arg) {
-	return new ProcessBuilder((cmd + arg.toString()).split(" ")).inheritIO().start();
-	//return new ProcessBuilder((cmd + arg.toString()).split(" ")).redirectOutput(devnull).redirectErrorStream(true).start();
+	//return new ProcessBuilder((cmd + arg.toString()).split(" ")).inheritIO().start();
+	return new ProcessBuilder((cmd + arg.toString()).split(" ")).redirectOutput(devnull).redirectErrorStream(true).start();
 }
 
 var jsjs = Paths.get("", "jsjs.js");
@@ -59,6 +59,12 @@ function run(runner, path) {
 	print("run of " + path + " = " + exitCode);
 }
 
+function clean() {
+	Files.walk(Paths.get("", "."))
+	  .filter(function(path) { return path.toString().endsWith(".class"); })
+	  .forEach(function(path) { Files.delete(path); });
+}
+
 var source = Files.walk(Paths.get("", "src"))
   .map(function(path) { return path.toString(); })
   .filter(function(name) { return name.endsWith(".java"); })
@@ -69,6 +75,12 @@ var tests = Files.list(Paths.get("", "test"))
 
 
 print("use JDK from " + java_home);
+
+if (arguments.indexOf("clean") != -1) {
+	clean();
+	print("cleaned !");
+	exit();
+}
 
 // compile java files
 compileJava(javac, source);
