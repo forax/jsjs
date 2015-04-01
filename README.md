@@ -42,7 +42,7 @@ In order to run, you need to put the class files of the 5 Java files (Builtins, 
 in the classpath, these classes implement the JavaScript semantics (in fact, a JavaScript-like, see below).
 
 
-## Does jsjs implements the ECMAScript standard ?
+## Does jsjs implements any ECMAScript standard ?
 No, jsjs semantics is a reduced subset of the ECMASCript 5 (strict mode) semantics with the guarantee to be stable.
 
 ## What do you mean by stable ?
