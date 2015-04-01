@@ -94,7 +94,6 @@ var compiler = Files.exists(artifact(jsjs, ".class"))? compiler_jsjs: compiler_j
 
 // re-compile jsjs with jsjs if bootstrap option is set
 if (arguments.indexOf("bootstrap") != -1) {
-	compileJS(compiler_jsjs, bootjs, true);
 	compileJS(compiler_jsjs, jsjs, true);
 }
 	
