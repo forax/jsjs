@@ -23,8 +23,8 @@ then use this class to recompile itself, bootstraping itself.
 ```
 
 ## Why do you need to put a home built version of Nashorn in the boot class path when running jsjs ?
-jsjs use the Nashorn parser API defined by the [JEP 236](http://openjdk.java.net/jeps/236)
-which is integrated in JDK 9 but not available with JDK 8 yet.
+jsjs uses the Nashorn parser API defined by the [JEP 236](http://openjdk.java.net/jeps/236)
+which is integrated in JDK 9 but not available in JDK 8 (yet ?).
 
 ## How to use jsjs on a simple JavaScript file ?
 jsjs acts as a compiler that takes a JavaScript file as input and generate a corresponding class file.
@@ -39,5 +39,18 @@ then the generated file, fun.class, can be run using the classical java command
 ```
 
 In order to run, you need to put the class files of the 5 Java files (Builtins, JSObject, JSFunction, JSArray and RT)
-in the classpath, these classes implement the JavaScript (in fact a JavaScript-like) semantics.
+in the classpath, these classes implement the JavaScript semantics (in fact, a JavaScript-like, see below).
 
+
+## Does jsjs implements the ECMAScript standard ?
+No, jsjs semantics is a reduced subset of the ECMASCript 5 (strict mode) semantics with the guarantee to be stable.
+
+## What do you mean by stable ?
+The stable semantics is a semantics in between the full mutable and full immutable semantics.
+Stable means that once a value has been observed as defined (as not undefined for JavaScript),
+then the value can not changed anymore. So local variables can be assigned once, object properties
+can be assigned once, prototypes can be assigned once, captured variables from enclosing scope are immutable
+(already assigned), etc.
+
+Given that being able to add a new property or a new method to any object is in the DNA of JavaScript,
+it seems to be, in my opinion, the only sane semantics. That's said, i may be wrong.
