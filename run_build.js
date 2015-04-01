@@ -73,7 +73,8 @@ print("use JDK from " + java_home);
 // compile java files
 compileJava(javac, source);
 
-// then compile jsjs.js with nashorn
+// then compile bootjs and jsjs.js with nashorn
+compileJS(compiler_jjs, bootjs, false);
 compileJS(compiler_jjs, jsjs, false);
 
 // then compile boot.js with jsjs if available
