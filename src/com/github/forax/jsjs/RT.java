@@ -252,7 +252,7 @@ public class RT {
     case "asthrowable":  // wrap into an error if needed
       JSFunction function = (JSFunction)GLOBAL_MAP.get(lookup.lookupClass()).get(op);
       if (function == null) {  // add an error message if the object is not a function
-        throw new Error("fail to find " + protocol + " protocol " + op);
+        throw new Error("fail to do " + protocol + " on " + op);
       }
       target = function.getFunctionTarget(genericMethodType(methodType.parameterCount())).asType(methodType);
       break;

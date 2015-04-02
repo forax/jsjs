@@ -1,10 +1,16 @@
 // boot script, initialize 
 
-//var AtomicInteger = Java.type("java.util.concurrence.atomic.AtomicInteger");
 
 function __wrapJavaArray__(javaArray) {
 	return __createArray__(Array.prototype, javaArray);
 }
+
+this.__proto__.parseInt = function (object) {
+	return Java.type("java.lang.Integer").parseInt(object.toString());
+};
+this.__proto__.parseFloat = function (object) {
+	return Java.type("java.lang.Double").parseDouble(object.toString());
+};
 
 Object.keys = function(object) {
 	return __createArray__(Array.prototype, __keys__(object));

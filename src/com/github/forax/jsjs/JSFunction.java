@@ -36,6 +36,7 @@ public final class JSFunction extends JSObject {
 
   @Override
   public String toString() {
+    //return name + " " + super.toString();  //DEBUG
     return name;
   }
   

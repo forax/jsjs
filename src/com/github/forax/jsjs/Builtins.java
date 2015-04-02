@@ -11,20 +11,11 @@ public class Builtins {
     return null;
   }
   
-  public static Object parseInt(Object string) {
-    return Integer.parseInt(string.toString());
-  }
-  
-  public static Object parseFloat(Object string) {
-    return Double.parseDouble(string.toString());
-  }
-  
-  
   // --- Java interrop
   
   public static Object javaTypeOf(String javaClassName) {
     try {
-      return RT.JAVA_TYPE_MAP.get(Class.forName(javaClassName.toString()));
+      return RT.JAVA_TYPE_MAP.get(Class.forName(javaClassName));
     } catch (ClassNotFoundException e) {
       throw new Error(e);
     }
