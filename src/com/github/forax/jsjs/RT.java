@@ -364,8 +364,7 @@ public class RT {
       }
       
       //System.out.println(" found function " + function);
-      MethodType mtype = mop.type();
-      MethodHandle target =  function.getFunctionTarget(mtype);
+      MethodHandle target =  function.getFunctionTarget(mop.type());
       return new CacheEntry(RT.TYPE_CHECK.bindTo(type), target);
     });
   }
