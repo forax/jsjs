@@ -69,16 +69,14 @@ public class RT {
       if (!filter.test(method)) {
         continue;
       }
+      method.setAccessible(true);  // FIXME HACK
       String name = method.getName();
-      
-      // FIXME HACK
-      method.setAccessible(true);
-      
       map.computeIfAbsent(name, key -> new ArrayList<>(2)).add(method);
     }
     
     map.forEach((name, methods) -> {
       metadata.set(name, new JSFunction(type.getName() + "::" + name, methodType -> {
+        //FIXME, implement overload resolution instead of choosing the first overload 
         Optional<Method> methodOpt = methods.stream().filter(m -> 1 + m.getParameterCount() == methodType.parameterCount()).findFirst();
         Method method;
         if (!methodOpt.isPresent()) {
@@ -172,6 +170,8 @@ public class RT {
         GLOBAL_MAP_TL_INIT.set(global);
         try {
           mh(publicLookup(), Lookup::findStatic, Class.forName("boot.boot"), "__script__", methodType(Object.class, Object.class)).invoke(global);
+        } catch(RuntimeException | Error e) {
+          throw e;
         } catch(Throwable e) {
           throw new Error(e);
         } finally {
