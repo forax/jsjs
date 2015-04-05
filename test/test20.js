@@ -1,7 +1,7 @@
 function test() {
 	var foo = function() {
 		return 3;
-	}
+	};
 	return foo;
 }
 

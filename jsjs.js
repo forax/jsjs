@@ -5,7 +5,7 @@
 //   /usr/jdk/jdk1.9.0/bin/java -Xbootclasspath/p:lib/nashorn.jar -cp .:classes:lib/asm-debug-all-5.0.3.jar jsjs jsjs.js
 
 // Java classes used
-var String = Java.type("java.lang.String")
+var String = Java.type("java.lang.String");
 var System = Java.type("java.lang.System");
 var PrintWriter = Java.type("java.io.PrintWriter");
 var List = Java.type("java.util.List");
@@ -346,6 +346,10 @@ var BSM_FUN_NEW = new Handle(Opcodes.H_INVOKESTATIC,
 	"com/github/forax/jsjs/RT",
 	"bsm_fun_new",
 	"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;");
+var BSM_OBJECT_LITERAL = new Handle(Opcodes.H_INVOKESTATIC,
+	"com/github/forax/jsjs/RT",
+	"bsm_object_literal",
+	"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/Object;)Ljava/lang/invoke/CallSite;");
 
 
 var lambdaId = new AtomicInteger(0);
@@ -499,7 +503,7 @@ gen.when(CompilationUnitTreeImpl, function(compilationUnit, visitor, env) {
 		}
 		keys.append(property.getKey());
 	}
-	env.mv.visitInvokeDynamicInsn("new:", env.desc(properties.size()), BSM, keys.toString());
+	env.mv.visitInvokeDynamicInsn("new", env.desc(properties.size()), BSM_OBJECT_LITERAL, keys.toString());
   })
   .when(VariableTreeImpl, function(variable, visitor, env) {
 	var name = variable.getName();

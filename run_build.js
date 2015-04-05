@@ -20,7 +20,7 @@ var java_home = "/usr/jdk/jdk1.8.0_40";
 //var java_home = "/usr/jdk/jdk1.9.0";
 var javac = java_home + "/bin/javac -Xbootclasspath/p:lib/nashorn.jar -cp lib/asm-debug-all-5.0.3.jar -sourcepath src -d classes ";
 var compiler_jjs = java_home + "/bin/jjs -J-Xbootclasspath/p:lib/nashorn.jar -cp classes:lib/asm-debug-all-5.0.3.jar " + jsjs + " -- ";
-var compiler_jsjs = java_home + "/bin/java -Xbootclasspath/p:lib/nashorn.jar -cp .:classes:lib/asm-debug-all-5.0.3.jar jsjs "
+var compiler_jsjs = java_home + "/bin/java -Xbootclasspath/p:lib/nashorn.jar -cp .:classes:lib/asm-debug-all-5.0.3.jar jsjs ";
 var runner = java_home + "/bin/java -cp .:classes ";
 
 var devnull = Paths.get("", "/dev/null").toFile();
