@@ -62,7 +62,7 @@ function run(runner, path) {
 function clean() {
 	Files.walk(Paths.get("", "."))
 	  .filter(function(path) { return path.toString().endsWith(".class"); })
-	  .forEach(function(path) { Files.delete(path); });
+	  .forEach(function(path) { Files.deleteIfExists(path); });
 }
 
 var source = Files.walk(Paths.get("", "src"))
