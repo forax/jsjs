@@ -16,6 +16,10 @@ public class Hack {
    return parser.parse(java.nio.file.Paths.get(path.toString()), null);
   }
   
+  public static StringBuilder appendString(StringBuilder builder, String text) {
+    return builder.append(text);
+  }
+  
   public static Object toInternalClassName(Object className) {
     return className.toString().replace('.', '/');
   }

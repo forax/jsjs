@@ -2,16 +2,21 @@ package com.github.forax.jsjs;
 
 import static com.github.forax.jsjs.RT.mh;
 import static java.lang.invoke.MethodHandles.arrayElementGetter;
+import static java.lang.invoke.MethodHandles.arrayElementSetter;
 import static java.lang.invoke.MethodHandles.constant;
 import static java.lang.invoke.MethodHandles.dropArguments;
 import static java.lang.invoke.MethodHandles.filterReturnValue;
+import static java.lang.invoke.MethodHandles.foldArguments;
 import static java.lang.invoke.MethodHandles.guardWithTest;
 import static java.lang.invoke.MethodHandles.insertArguments;
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.lang.invoke.MethodType.genericMethodType;
 import static java.lang.invoke.MethodType.methodType;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.invoke.SwitchPoint;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,11 +34,9 @@ public class JSObject {
   /* stable */ Object[] values;
   
   public JSObject(JSObject proto) {
-    hiddenClass = HIDDEN_MAP_ROOT;
-    if (proto != null) {
-      setPrototypeOf(this, proto);
-    }
-    values = new Object[4];
+    this.hiddenClass = (proto != null)? HIDDEN_MAP_ROOT_WITH_PROTO: HIDDEN_MAP_ROOT;
+    this.proto = proto;
+    this.values = new Object[4];
   }
   
   public JSObject() {
@@ -41,9 +44,20 @@ public class JSObject {
     values = new Object[4];
   }
   
+  private JSObject(HiddenClass hiddenClass, JSObject proto, Object[] values) {
+    this.hiddenClass = hiddenClass;
+    this.proto = proto;
+    this.values = values;
+  }
+  
   // called by a method handle
   static JSObject newJSObject(JSObject proto) {
     return new JSObject(proto);
+  }
+ 
+  // called by a method handle for the object literal syntax 
+  static JSObject newJSLiteralObject(HiddenClass hiddenClass, JSObject proto, Object[] values) {
+    return new JSObject(hiddenClass, proto, values);
   }
   
   final Object get(String key) {
@@ -157,17 +171,40 @@ public class JSObject {
         return new HiddenClass(slotMap);
       });
     }
-    
     HiddenClass forwardProto() {
-      return forwardMap.computeIfAbsent(PROTO_KEY, k -> {
-        return new HiddenClass(slotMap);
-      });
+      return forwardMap.computeIfAbsent(PROTO_KEY, k -> new HiddenClass(slotMap));
     }
     
     @Override
     public String toString() {  // DEBUG
       return slotMap.keySet().stream().map(Object::toString).collect(java.util.stream.Collectors.joining(", ", "[", "]"));
     }
+  }
+  
+  static MethodHandle getLiteralObject(String[] keys) {
+    HiddenClass hiddenClass = HIDDEN_MAP_ROOT;
+    for(String key: keys) {
+      if (PROTO_KEY.equals(key)) {
+        throw new Error("setting the proto key is currently unsupported !");
+      }
+      hiddenClass = hiddenClass.forward(key);
+    }
+    
+    MethodHandle mh = insertArguments(RT.JSOBJECT_LITERAL_NEW, 0, hiddenClass, /*proto*/null);
+    mh = dropArguments(mh, 1, genericMethodType(keys.length).parameterList());
+    
+    for(int i = 0; i < keys.length; i++) {
+      String key = keys[i];
+      MethodHandle setter = insertArguments(ARRAY_SETTER, 1, hiddenClass.slot(key));
+      if (i != 0) {
+        setter = dropArguments(setter, 1, genericMethodType(i).parameterList());
+      }
+      mh = foldArguments(mh, setter);
+    }
+    
+    int objectSize = hiddenClass.slotMap.size();
+    MethodHandle newObjectArray = insertArguments(RT.NEW_OBJECT_ARRAY, 0, objectSize);
+    return foldArguments(mh, newObjectArray);
   }
   
   //returned method handle is typed ()JSObject
@@ -251,10 +288,12 @@ public class JSObject {
     return SET_KEY.asType(methodType(void.class, JSObject.class, Object.class, Object.class));
   }
   
-  private static final MethodHandle ARRAY_GETTER = arrayElementGetter(Object[].class);
+  private static final MethodHandle ARRAY_GETTER, ARRAY_SETTER;
   static final MethodHandle GET_PROTOTYPE_OF;
   private static final MethodHandle GET_VALUES, GET_HIDDEN_CLASS, GET_KEY, SET_KEY;
   static {
+    ARRAY_GETTER = arrayElementGetter(Object[].class);
+    ARRAY_SETTER = arrayElementSetter(Object[].class);
     Lookup lookup = lookup();
     GET_VALUES = mh(lookup, Lookup::findGetter, JSObject.class, "values", Object[].class);
     GET_HIDDEN_CLASS = mh(lookup, Lookup::findGetter, JSObject.class, "hiddenClass", HiddenClass.class)
@@ -267,4 +306,5 @@ public class JSObject {
   private static final String PROTO_KEY = "__proto__";
   static final String PROTOTYPE_KEY = "prototype";
   private static final HiddenClass HIDDEN_MAP_ROOT = new HiddenClass(new HashMap<>());
+  private static final HiddenClass HIDDEN_MAP_ROOT_WITH_PROTO = HIDDEN_MAP_ROOT.forwardProto();
 }

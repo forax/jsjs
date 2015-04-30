@@ -6,6 +6,7 @@
 
 // Java classes used
 var String = Java.type("java.lang.String");
+var StringBuilder = Java.type("java.lang.StringBuilder");
 var System = Java.type("java.lang.System");
 var PrintWriter = Java.type("java.io.PrintWriter");
 var List = Java.type("java.util.List");
@@ -80,7 +81,7 @@ function Visitor() {
 Visitor.prototype.when = function(type, fun) {
 	this.map[type.class.toString()] = fun;
 	return this;
-}
+};
 Visitor.prototype.call = function(receiver, env) {
 	if (receiver == undefined) {
 		throw "receiver is undefined !";
@@ -90,7 +91,7 @@ Visitor.prototype.call = function(receiver, env) {
 		throw "no mapping for " + receiver.getClass();
 	}
 	return fun(receiver, this, env);
-}
+};
 
 // --- free vars env
 
@@ -103,7 +104,7 @@ FreeVarEnv.prototype.addLocal = function(name) {
 	if (this.locals[name] == undefined) {
 	    this.locals[name] = name;
 	}
-}
+};
 FreeVarEnv.prototype.isLocal = function(name) {
 	if (this.locals[name] != undefined) {
 	    return true;
@@ -112,14 +113,14 @@ FreeVarEnv.prototype.isLocal = function(name) {
 		return false;
 	}
 	return this.parent.isLocal(name);
-}
+};
 FreeVarEnv.prototype.addFreeVar = function(name) {
 	if (this.isLocal(name) == false) {
 		if (this.freevars[name] == undefined) {
 		    this.freevars[name] = name;
 		}
 	}
-}
+};
 
 
 // --- free vars visitor
@@ -146,16 +147,15 @@ freevarVisitor
   .when(AssignmentTreeImpl, function(assignment, visitor, env) {
 	var variable = assignment.getVariable();
 	if (variable instanceof IdentifierTreeImpl) { // local var re-assignment
-      throw "variable " + variable.getName() + " can only be initialized once !";	
-	} else {  
-	  if (variable instanceof MemberSelectTreeImpl) {  // field assignment
-		visitor.call(variable.getExpression(), env);
-		visitor.call(assignment.getExpression(), env);
-	  } else {  // array assignment
-		visitor.call(variable.getExpression(), env);
-		visitor.call(variable.getIndex(), env);
-		visitor.call(assignment.getExpression(), env);
-	  }
+          throw "variable " + variable.getName() + " can only be initialized once !";	
+	}  
+	if (variable instanceof MemberSelectTreeImpl) {  // field assignment
+	    visitor.call(variable.getExpression(), env);
+	    visitor.call(assignment.getExpression(), env);
+	} else {  // array assignment
+	    visitor.call(variable.getExpression(), env);
+	    visitor.call(variable.getIndex(), env);
+	    visitor.call(assignment.getExpression(), env);
 	}
   })
   .when(FunctionCallTreeImpl, function(funcall, visitor, env) {
@@ -210,13 +210,13 @@ freevarVisitor
 	if (init instanceof FunctionCallTreeImpl) {
 	  var args = init.getArguments();
 	  var selector = init.getFunctionSelect();
-      if (selector instanceof IdentifierTreeImpl) {
+          if (selector instanceof IdentifierTreeImpl) {
 	    for each(var arg in args) {
 	      visitor.call(arg, env);	
-		}
+	    }
 	    
 	    // it's maybe a local variable access
-    	env.addFreeVar(selector.getName());
+    	    env.addFreeVar(selector.getName());
 	    return;
 	  }
 	}
@@ -281,18 +281,18 @@ Env.prototype.lookup = function(name) {
 		return undefined;
 	}
 	return this.parent.lookup(name);
-}
+};
 Env.prototype.register = function(name) {
 	var slot = this.newSlot();
 	this.map[name] = slot;
 	return slot;
-}
+};
 Env.prototype.newSlot = function() {
 	return this.size.getAndIncrement();
-}
+};
 Env.prototype.desc = function(parameterCount) {
 	return MethodType.genericMethodType(parameterCount).toMethodDescriptorString();
-}
+};
 
 
 
@@ -349,7 +349,7 @@ var BSM_FUN_NEW = new Handle(Opcodes.H_INVOKESTATIC,
 var BSM_OBJECT_LITERAL = new Handle(Opcodes.H_INVOKESTATIC,
 	"com/github/forax/jsjs/RT",
 	"bsm_object_literal",
-	"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/Object;)Ljava/lang/invoke/CallSite;");
+	"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;)Ljava/lang/invoke/CallSite;");
 
 
 var lambdaId = new AtomicInteger(0);
@@ -371,10 +371,10 @@ function genFun(fun, isLocal, visitor, env) {
   var captureds = new Object();
   for each(var freevar in freevars) {
     var slot = env.lookup(freevar);
-	if (slot != undefined) {
-	  captureds[freevar] = freevar;
-	  env.mv.visitVarInsn(Opcodes.ALOAD, slot);
-	}
+    if (slot != undefined) {
+      captureds[freevar] = freevar;
+      env.mv.visitVarInsn(Opcodes.ALOAD, slot);
+    }
   }
   var capturedvars = Object.keys(captureds);
   capturedvars.sort();
@@ -387,11 +387,11 @@ function genFun(fun, isLocal, visitor, env) {
   
   var newEnv = new Env(null, mv);
   for each(var capturedvar in capturedvars) {
-	newEnv.register(capturedvar);
+    newEnv.register(capturedvar);
   }
   newEnv.register("this");
   for each(var parameter in fun.getParameters()) {
-	newEnv.register(parameter.getName());
+    newEnv.register(parameter.getName());
   }
 	
   mv.visitCode();
@@ -408,10 +408,10 @@ function genFun(fun, isLocal, visitor, env) {
 var gen = new Visitor();
 gen.when(CompilationUnitTreeImpl, function(compilationUnit, visitor, env) {
 	for each(var element in compilationUnit.getSourceElements()) {
-		var lineLabel = new Label();
-		env.mv.visitLabel(lineLabel);
-		env.mv.visitLineNumber(line(element), lineLabel);
-		visitor.call(element, env);
+          var lineLabel = new Label();
+	  env.mv.visitLabel(lineLabel);
+	  env.mv.visitLineNumber(line(element), lineLabel);
+	  visitor.call(element, env);
 	}
   })
   .when(FunctionDeclarationTreeImpl, function(functionDeclaration, visitor, env) {
@@ -422,10 +422,10 @@ gen.when(CompilationUnitTreeImpl, function(compilationUnit, visitor, env) {
   .when(BlockTreeImpl, function(block, visitor, env) {
 	var newEnv = new Env(env, env.mv);
 	for each(var statement in block.getStatements()) {
-		var lineLabel = new Label();
-		env.mv.visitLabel(lineLabel);
-		env.mv.visitLineNumber(line(statement), lineLabel);
-		visitor.call(statement, newEnv);
+	  var lineLabel = new Label();
+	  env.mv.visitLabel(lineLabel);
+	  env.mv.visitLineNumber(line(statement), lineLabel);
+	  visitor.call(statement, newEnv);
 	}
   })
   .when(ExpressionStatementTreeImpl, function(exprStatement, visitor, env) {
@@ -435,20 +435,19 @@ gen.when(CompilationUnitTreeImpl, function(compilationUnit, visitor, env) {
   .when(AssignmentTreeImpl, function(assignment, visitor, env) {
 	var variable = assignment.getVariable();
 	if (variable instanceof IdentifierTreeImpl) { // local var re-assignment
-      throw "variable " + variable.getName() + " can only be initialized once !";	
-	} else {  
-	  if (variable instanceof MemberSelectTreeImpl) {  // field assignment
-		visitor.call(variable.getExpression(), env);
-		visitor.call(assignment.getExpression(), env);
-		env.mv.visitInsn(Opcodes.DUP_X1);
-		env.mv.visitInvokeDynamicInsn(variable.getIdentifier(), "(Ljava/lang/Object;Ljava/lang/Object;)V", BSM_SET);
-	  } else {  // array assignment
-		visitor.call(variable.getExpression(), env);
-		visitor.call(variable.getIndex(), env);
-		visitor.call(assignment.getExpression(), env);
-		env.mv.visitInsn(Opcodes.DUP_X2);
-		env.mv.visitInvokeDynamicInsn("set", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V", BSM_ARRAY_SET);
-	  }
+          throw "variable " + variable.getName() + " can only be initialized once !";	
+	} 
+	if (variable instanceof MemberSelectTreeImpl) {  // field assignment
+	  visitor.call(variable.getExpression(), env);
+	  visitor.call(assignment.getExpression(), env);
+	  env.mv.visitInsn(Opcodes.DUP_X1);
+	  env.mv.visitInvokeDynamicInsn(variable.getIdentifier(), "(Ljava/lang/Object;Ljava/lang/Object;)V", BSM_SET);
+	} else {  // array assignment
+	  visitor.call(variable.getExpression(), env);
+	  visitor.call(variable.getIndex(), env);
+	  visitor.call(assignment.getExpression(), env);
+	  env.mv.visitInsn(Opcodes.DUP_X2);
+	  env.mv.visitInvokeDynamicInsn("set", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V", BSM_ARRAY_SET);
 	}
   })
   .when(FunctionCallTreeImpl, function(funcall, visitor, env) {
@@ -458,16 +457,16 @@ gen.when(CompilationUnitTreeImpl, function(compilationUnit, visitor, env) {
 	  var name = selector.getName();
 	  var slot = env.lookup(name);
 	  if (slot != undefined) {  // it's lambda call
-		env.mv.visitVarInsn(Opcodes.ALOAD, slot);
+	    env.mv.visitVarInsn(Opcodes.ALOAD, slot);
 	  }
 	  env.mv.visitInsn(Opcodes.ACONST_NULL);  // FIXME this should be undefined, not null
 	  for each(var arg in args) {
 	    visitor.call(arg, env);	
 	  }
 	  if (slot != undefined) {
-		env.mv.visitInvokeDynamicInsn(name, env.desc(2 + args.size()), BSM_LAMBDA_CALL);
+	    env.mv.visitInvokeDynamicInsn(name, env.desc(2 + args.size()), BSM_LAMBDA_CALL);
 	  } else {
-		env.mv.visitInvokeDynamicInsn("call:" + name, env.desc(1 + args.size()), BSM);
+	    env.mv.visitInvokeDynamicInsn("call:" + name, env.desc(1 + args.size()), BSM);
 	  }
 	} else {  // method call
 	  visitor.call(selector.getExpression(), env);
@@ -487,8 +486,8 @@ gen.when(CompilationUnitTreeImpl, function(compilationUnit, visitor, env) {
 	var name = identifier.getName();
 	var slot = env.lookup(name);
 	if (slot != undefined) {
-      //print("lookup local variable " + name + " " + slot);
-      env.mv.visitVarInsn(Opcodes.ALOAD, slot);
+          //print("lookup local variable " + name + " " + slot);
+          env.mv.visitVarInsn(Opcodes.ALOAD, slot);
 	} else {
 	  env.mv.visitInvokeDynamicInsn(name, "()Ljava/lang/Object;", BSM_GLOBAL);
 	}
@@ -497,11 +496,16 @@ gen.when(CompilationUnitTreeImpl, function(compilationUnit, visitor, env) {
 	var properties = objectLiteral.getProperties();
 	var keys = new StringBuilder();
 	for each(var property in properties) {
-		visitor.call(property.getValue(), env);
-		if (keys.length() != 0) {
-		  keys.append(":");
-		}
-		keys.append(property.getKey());
+	  visitor.call(property.getValue(), env);
+	  if (keys.length() != 0) {
+	    Hack.appendString(keys, ":");
+	  }
+	  var key = property.getKey();
+	  if (key instanceof IdentifierTreeImpl) {
+	      Hack.appendString(keys, key.getName());
+	  } else {
+	      throw "property name must be an identifier";
+	  }
 	}
 	env.mv.visitInvokeDynamicInsn("new", env.desc(properties.size()), BSM_OBJECT_LITERAL, keys.toString());
   })
@@ -553,17 +557,15 @@ gen.when(CompilationUnitTreeImpl, function(compilationUnit, visitor, env) {
 	if (init instanceof FunctionCallTreeImpl) {
 	  var args = init.getArguments();
 	  var selector = init.getFunctionSelect();
-      if (selector instanceof IdentifierTreeImpl) {  // function call
-    	var name = selector.getName();
-    	var slot = env.lookup(name);
-    	if (slot != undefined) {  // it's a lambda creation
-    	  env.mv.visitVarInsn(Opcodes.ALOAD, slot);
-    	}  
-    	  
+          if (selector instanceof IdentifierTreeImpl) {  // function call
+    	    var name = selector.getName();
+    	    var slot = env.lookup(name);
+    	    if (slot != undefined) {  // it's a lambda creation
+    	      env.mv.visitVarInsn(Opcodes.ALOAD, slot);
+    	    }  
 	    for each(var arg in args) {
 	      visitor.call(arg, env);	
-		}
-	    
+	    }
 	    if (slot != undefined) {
 	      env.mv.visitInvokeDynamicInsn(selector.getName(), env.desc(1 + args.size()), BSM_LAMBDA_NEW);	
 	    } else {
@@ -589,7 +591,7 @@ gen.when(CompilationUnitTreeImpl, function(compilationUnit, visitor, env) {
   })
   .when(ConditionalExpressionTreeImpl, function(conditional, visitor, env) {
 	var elseLabel = new Label(); 
-    var endLabel = new Label();
+        var endLabel = new Label();
 	visitor.call(conditional.getCondition(), env);
 	env.mv.visitInvokeDynamicInsn("truth:", "(Ljava/lang/Object;)Z", BSM);
 	env.mv.visitJumpInsn(Opcodes.IFEQ, elseLabel);

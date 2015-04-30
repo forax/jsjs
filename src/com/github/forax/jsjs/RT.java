@@ -33,6 +33,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
+import com.github.forax.jsjs.JSObject.HiddenClass;
+
 public class RT {
   private static <T> ClassValue<T> classValue(Function<Class<?>, T> initializer) {
     return new ClassValue<T>() {
@@ -220,6 +222,17 @@ public class RT {
       return new ConstantCallSite(constant(Object.class, def(global, isLocal, name, target)));
     }
     return new ConstantCallSite(insertArguments(DEF, 0, global, isLocal, name, target).asCollector(Object[].class, methodType.parameterCount()));
+  }
+  
+  // called by a method handle
+  private static Object[] newObjectArray(int size) {
+    return new Object[size];
+  }
+  
+  public static CallSite bsm_object_literal(Lookup lookup, String name, MethodType methodType, String properties) {
+    String[] keys = properties.split(":");
+    MethodHandle target = JSObject.getLiteralObject(keys);
+    return new ConstantCallSite(target.asType(methodType));
   }
   
   public static CallSite bsm_const(Lookup lookup, String name, MethodType methodType, Object constant) {
@@ -492,11 +505,13 @@ public class RT {
   }
   
   private static final MethodHandle JSOBJECT_NEW, DEF;
-  static final MethodHandle TYPE_CHECK, POINTER_CHECK, SET_TARGET;
+  static final MethodHandle TYPE_CHECK, POINTER_CHECK, SET_TARGET, NEW_OBJECT_ARRAY, JSOBJECT_LITERAL_NEW;
   static {
     Lookup lookup = MethodHandles.lookup();
     MHFactory<MethodType> findStatic = Lookup::findStatic;
     JSOBJECT_NEW = mh(lookup, findStatic, JSObject.class, "newJSObject", methodType(JSObject.class, JSObject.class));
+    NEW_OBJECT_ARRAY = mh(lookup, findStatic, RT.class, "newObjectArray", methodType(Object[].class, int.class));
+    JSOBJECT_LITERAL_NEW = mh(lookup, findStatic, JSObject.class, "newJSLiteralObject", methodType(JSObject.class, HiddenClass.class, JSObject.class, Object[].class));
     DEF = mh(lookup, findStatic, RT.class, "def", methodType(Object.class, JSObject.class, boolean.class, String.class, MethodHandle.class, Object[].class));
     TYPE_CHECK = mh(lookup, findStatic, RT.class, "typeCheck", methodType(boolean.class, Class.class, Object.class));
     POINTER_CHECK = mh(lookup, findStatic, RT.class, "pointerCheck", methodType(boolean.class, Object.class, Object.class));
