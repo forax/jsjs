@@ -138,7 +138,7 @@ freevarVisitor
   .when(BlockTreeImpl, function(block, visitor, env) {
 	var newEnv = new FreeVarEnv(env, new Object(), env.freevars);
 	for each(var statement in block.getStatements()) {
-		visitor.call(statement, env);
+		visitor.call(statement, newEnv);
 	}
   })
   .when(ExpressionStatementTreeImpl, function(exprStatement, visitor, env) {
