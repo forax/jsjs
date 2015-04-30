@@ -230,7 +230,7 @@ public class RT {
   }
   
   public static CallSite bsm_object_literal(Lookup lookup, String name, MethodType methodType, String properties) {
-    String[] keys = properties.split(":");
+    String[] keys = (properties.isEmpty())? new String[0]: properties.split(":");
     MethodHandle target = JSObject.getLiteralObject(keys);
     return new ConstantCallSite(target.asType(methodType));
   }
