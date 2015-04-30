@@ -239,7 +239,10 @@ public class RT {
     switch(name) {  // booleans have no encoding in the constant pool, use the string representation instead
     case "true":
     case "false":
-      constant = Boolean.valueOf(name);   
+      constant = Boolean.valueOf(name);
+      break;
+    default:
+      // do nothing, the constant is already encoded in the constant pool
     }
     return new ConstantCallSite(constant(Object.class, constant));
   }
